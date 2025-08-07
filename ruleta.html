@@ -65,16 +65,18 @@
 
         .section {
             position: absolute;
-            width: 50%;
+            width: 100%;
             height: 50%;
-            transform-origin: 100% 100%;
+            transform-origin: 50% 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            padding-top: 0;
+            clip-path: polygon(50% 0%, 100% 0%, 50% 100%);
         }
 
         .section:nth-child(1) {
@@ -253,29 +255,102 @@
         .wheel {
             transform: rotate(0deg);
         }
+
+        /* Añadir transformación de texto para cada sección */
+        .section:nth-child(1) {
+            transform: rotate(0deg);
+        }
+
+        .section:nth-child(1) span {
+            transform: rotate(0deg);
+        }
+
+        .section:nth-child(2) {
+            transform: rotate(60deg);
+        }
+
+        .section:nth-child(2) span {
+            transform: rotate(-60deg);
+        }
+
+        .section:nth-child(3) {
+            transform: rotate(120deg);
+        }
+
+        .section:nth-child(3) span {
+            transform: rotate(-120deg);
+        }
+
+        .section:nth-child(4) {
+            transform: rotate(180deg);
+        }
+
+        .section:nth-child(4) span {
+            transform: rotate(-180deg);
+        }
+
+        .section:nth-child(5) {
+            transform: rotate(240deg);
+        }
+
+        .section:nth-child(5) span {
+            transform: rotate(-240deg);
+        }
+
+        .section:nth-child(6) {
+            transform: rotate(300deg);
+        }
+
+        .section:nth-child(6) span {
+            transform: rotate(-300deg);
+        }
+
+        .number-display {
+            background: linear-gradient(45deg, #2c3e50, #3498db);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 20px auto;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            border: 5px solid #fff;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .percentage {
+            font-size: 8rem;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            transition: all 0.05s ease-out;
+        }
+
+        @keyframes numberChange {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h1 class="title">🎯 RULETA DE DESCUENTOS 🎯</h1>
+        <h1 class="title">🎯 GANA TU DESCUENTO 🎯</h1>
 
-        <div class="wheel-container">
-            <div class="wheel" id="wheel">
-                <div class="section">2%</div>
-                <div class="section">5%</div>
-                <div class="section">7%</div>
-                <div class="section">10%</div>
-                <div class="section">12%</div>
-                <div class="section">15%</div>
-            </div>
-            <div class="pointer"></div>
-            <div class="center-circle"></div>
+        <div class="number-display">
+            <div id="percentage" class="percentage">0%</div>
         </div>
 
         <button class="spin-button" onclick="spinWheel()">¡GIRAR RULETA!</button>
-
-        <div class="result" id="result"></div>
+        <div class="result" id="result">  </div>
         <div class="attempts" id="attempts">Intento: 1/3</div>
     </div>
 
@@ -290,74 +365,92 @@
     <script>
         let currentAttempt = 1;
         let isSpinning = false;
-
-        const percentages = [2, 5, 7, 10, 12, 15];
-        const sectionAngles = [0, 60, 120, 180, 240, 300]; // Ángulos de cada sección
+        // Creamos array con porcentajes del 1 al 15
+        const percentages = Array.from({length: 15}, (_, i) => i + 1);
 
         function spinWheel() {
             if (isSpinning) return;
 
             isSpinning = true;
             const button = document.querySelector('.spin-button');
+            const percentageDisplay = document.getElementById('percentage');
             button.disabled = true;
             button.textContent = 'GIRANDO...';
 
-            const wheel = document.getElementById('wheel');
-            let selectedIndex;
+            let selectedPercentage;
+            const intervalDuration = 50; // Reducido de 100 a 50 para más velocidad
+            let duration = 2000; // Reducido de 3000 a 2000 para hacer más rápido el giro
 
-            // Determinar el índice seleccionado
+            // Determinar el porcentaje final
             if (currentAttempt === 3) {
-                selectedIndex = 5; // 15% en el último intento
+                selectedPercentage = 15; // 15% garantizado en el último intento
             } else {
-                selectedIndex = Math.floor(Math.random() * 5); // Números del 0 al 4 para los primeros intentos
+                // Excluimos el 15 de las opciones aleatorias en los primeros dos intentos
+                selectedPercentage = percentages[Math.floor(Math.random() * 14)];
             }
 
-            // Resetear la transición y rotación
-            wheel.style.transition = 'none';
-            wheel.style.transform = 'rotate(0deg)';
+            // Función para mostrar números aleatorios
+            let lastNumber = -1; // Para evitar números repetidos consecutivos
+            const intervalId = setInterval(() => {
+                let randomPercentage;
+                do {
+                    randomPercentage = percentages[Math.floor(Math.random() * percentages.length)];
+                } while (randomPercentage === lastNumber);
+                
+                lastNumber = randomPercentage;
+                percentageDisplay.textContent = `${randomPercentage}%`;
+                percentageDisplay.style.animation = 'numberChange 0.05s ease-out'; // Reducido de 0.1s a 0.05s
+            }, intervalDuration);
 
-            // Forzar un reflow
-            void wheel.offsetWidth;
-
-            // Calcular rotación más realista
-            const minSpins = 5;
-            const maxSpins = 8;
-            const extraSpins = Math.random() * (maxSpins - minSpins) + minSpins;
-            const baseRotation = 360 * extraSpins;
-            const targetAngle = sectionAngles[selectedIndex];
-            const finalRotation = baseRotation + (360 - targetAngle);
-
-            // Aplicar la rotación con easing
-            wheel.style.transition = 'transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
-            wheel.style.transform = `rotate(${finalRotation}deg)`;
-
-            // Mostrar resultado después de la animación
+            // Detener en el número seleccionado con efecto de desaceleración
             setTimeout(() => {
-                showResult(percentages[selectedIndex]);
-                createCelebration();
+                clearInterval(intervalId);
+                
+                // Efecto de desaceleración final
+                const slowdown = setInterval(() => {
+                    let randomPercentage = percentages[Math.floor(Math.random() * percentages.length)];
+                    percentageDisplay.textContent = `${randomPercentage}%`;
+                }, 100);
 
-                button.disabled = false;
-                button.textContent = '¡GIRAR RULETA!';
-                isSpinning = false;
+                setTimeout(() => {
+                    clearInterval(slowdown);
+                    percentageDisplay.textContent = `${selectedPercentage}%`;
+                    showResult(selectedPercentage);
+                    createCelebration();
 
-                currentAttempt++;
-                updateAttempts();
+                    button.disabled = false;
+                    button.textContent = '¡GIRAR RULETA!';
+                    isSpinning = false;
 
-                if (currentAttempt > 3) {
-                    button.textContent = '¡JUEGO COMPLETADO!';
-                    button.disabled = true;
-                }
-            }, 5000); // Aumentado a 5 segundos para coincidir con la duración de la animación
+                    currentAttempt++;
+                    updateAttempts();
+
+                    if (currentAttempt > 3) {
+                        button.textContent = '¡JUEGO COMPLETADO!';
+                        button.disabled = true;
+                    }
+                }, 300);
+            }, duration);
         }
 
         function showResult(percentage) {
             const result = document.getElementById('result');
-            result.innerHTML = `🎉 ¡Ganaste un <span style="color: #ffd700; font-size: 2.2rem;">${percentage}%</span> de descuento! 🎉`;
+            result.innerHTML = `🎉 ¡Ganaste un <hr></hr> <span style="color: #ffd700; font-size: 2.2rem;">${percentage}%</span>  de descuento en tu Plan Perseo Web! 🎉`;
 
             // Animar el resultado
             result.style.animation = 'none';
             setTimeout(() => {
                 result.style.animation = 'glow 1s ease-in-out infinite alternate';
+            }, 10);
+
+            // Mostrar el porcentaje grande en el centro
+            const percentageDisplay = document.getElementById('percentage');
+            percentageDisplay.textContent = `${percentage}%`;
+
+            // Animar el porcentaje
+            percentageDisplay.style.animation = 'none';
+            setTimeout(() => {
+                percentageDisplay.style.animation = 'glow 1.5s ease-in-out infinite alternate';
             }, 10);
         }
 
